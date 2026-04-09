@@ -1,10 +1,30 @@
-version: '3'
-
 services:
-  cqps:
-    image: tsuk1ko/cq-picsearcher-bot
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
     restart: always
-    network_mode: host
+    environment:
+      LOG_LEVEL: info
+      TZ: Asia/Shanghai
+      TEST_URL: https://www.baidu.com
+    ports:
+      - "8191:8191"
+    networks:
+      - cqps-net
+
+  cqps:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cq-picsearcher-bot:local
+    restart: always
+    depends_on:
+      - flaresolverr
     volumes:
       - ./data:/app/data
       - ./config.jsonc:/app/config.jsonc
+    networks:
+      - cqps-net
+
+networks:
+  cqps-net:
+    driver: bridge
