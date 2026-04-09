@@ -15,6 +15,7 @@ import ocr from './plugin/ocr/index.mjs';
 import { rmdHandler } from './plugin/reminder.mjs';
 import saucenao, { snDB } from './plugin/saucenao.mjs';
 import sendSetu from './plugin/setu.mjs';
+import soutubot from './plugin/soutubot.mjs';
 import vits from './plugin/vits.mjs';
 import whatanime from './plugin/whatanime.mjs';
 import { loadConfig } from './setup/config.mjs';
@@ -548,6 +549,7 @@ async function searchImg(context, customDB = -1) {
     else if (args.doujin || args.book) db = snDB.doujin;
     else if (args.anime) db = snDB.anime;
     else if (args.a2d) db = -10001;
+    else if (args.soutu) db = -10002;
     else if (context.message_type === 'private') {
       // 私聊搜图模式
       const sdb = logger.smStatus(0, context.user_id);
@@ -627,6 +629,7 @@ async function searchImg(context, customDB = -1) {
     let snLowAcc = false;
     let useAscii2d = args.a2d;
     let useWhatAnime = db === snDB.anime;
+    const useSoutubot = db === -10002;
 
     // saucenao
     if (!useAscii2d) {
@@ -675,6 +678,15 @@ async function searchImg(context, customDB = -1) {
       if (!waRet.success) success = false; // 如果搜番有误也视作不成功
       await replier.reply(...waRet.msgs);
       if (waRet.msgs.length > 0) needCacheMsgs.push(...waRet.msgs);
+    }
+
+    // soutubot
+    if (useSoutubot) {
+      const stRes = await soutubot(img).catch(stErr => ({ success: false, msg: `soutubot 搜索失败\n${stErr.message || stErr}` }));
+      if (stRes.success) hasSucc = true;
+      if (!stRes.success) success = false;
+      if (stRes.msg.length > 0) needCacheMsgs.push(stRes.msg);
+      await replier.reply(stRes.msg);
     }
 
     if (!hasSucc) logger.releaseQuota(context.user_id);

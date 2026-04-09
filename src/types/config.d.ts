@@ -9,6 +9,8 @@ export declare interface Config {
     whatanimeHost: string;
     whatanimeToken: string;
     ascii2dHost: string;
+    soutubotHost: string;
+    soutubotToken: string;
     setuApiHost: string;
 }
 
@@ -26,6 +28,7 @@ declare interface Flaresolverr {
     autoDestroySession: boolean;
     enableForAscii2d: boolean;
     enableForNHentai: boolean;
+    enableForSoutubot: boolean;
 }
 
 declare interface Bot {

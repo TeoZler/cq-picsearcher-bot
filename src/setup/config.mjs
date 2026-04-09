@@ -26,6 +26,8 @@ const stringToArrayPaths = new Set([
   'whatanimeHost',
   'whatanimeToken',
   'ascii2dHost',
+  'soutubotHost',
+  'soutubotToken',
 ]);
 const arrayToSetPaths = new Set([
   'bot.whiteGroup',
