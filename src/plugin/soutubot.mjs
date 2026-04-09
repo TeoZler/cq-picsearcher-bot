@@ -1,4 +1,4 @@
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import FormData from 'form-data';
 import Axios from '../utils/axiosProxy.mjs';
 import { flareSolverr } from '../utils/flareSolverr.mjs';
@@ -156,13 +156,24 @@ async function getSearchResult(host, img) {
     (global.config.flaresolverr.enableForSoutubot && flareSolverr.ua) || DEFAULT_UA;
   const token = generateApiKey(ua, m);
 
+  // 优先使用本地文件路径，不可用时从 URL 下载（兼容 Docker 跨容器场景）
+  let fileBuffer;
   const path = await img.getPath();
-  if (!path) {
-    throw new Error('无法获取图片路径');
+  if (path && existsSync(path)) {
+    fileBuffer = readFileSync(path);
+  } else if (img.isUrlValid) {
+    const resp = await retryAsync(
+      () => Axios.get(img.url, { responseType: 'arraybuffer', timeout: 15000 }),
+      3,
+      e => e.code === 'ECONNRESET',
+    );
+    fileBuffer = Buffer.from(resp.data);
+  } else {
+    throw new Error('无法获取图片：本地路径不存在且 URL 无效');
   }
 
   const form = new FormData();
-  form.append('file', readFileSync(path), { filename: 'image', contentType: 'image/jpeg' });
+  form.append('file', fileBuffer, { filename: 'image', contentType: 'image/jpeg' });
   form.append('factor', '1.2');
 
   const headers = {
